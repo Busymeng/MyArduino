@@ -14,6 +14,24 @@ module aludecoder(input  logic [1:0] ALUOp,
     //  not g1(ALUControl[0], funct3[0]);
     // This is just an example; replace this with correct logic!
     
+    logic x6n,x5n,x4n,x2n;
+    logic n1,n2,n3;
+    not g1(x5n,ALUOp[0]);
+    not g2(x4n,funct3[2]);
+    not g3(x2n,funct3[0]);
+    
+    and g4(ALUControl[2],ALUOp[1],x5n,x4n,funct3[1],x2n);
+    
+    and g5(ALUControl[1],ALUOp[1],x5n,funct3[2],funct3[1]);
+    
+    not g6(x6n,ALUOp[1]);
+    and g7(n1,x6n,ALUOp[0]);
+    and g8(n2,ALUOp[1],x5n,x4n,x2n,op_5,funct7_5);
+    and g9(n3,ALUOp[1],x5n,funct3[1],x2n);
+    or g10(ALUControl[0],n1,n2,n3);
+    
+    
+    
 
 endmodule
 
