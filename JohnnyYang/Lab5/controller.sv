@@ -23,6 +23,79 @@ module controller(input  logic       clk,
                   output logic [2:0] ALUControl,
                   output logic       IRWrite, PCWrite, 
                   output logic       RegWrite, MemWrite);
+                  
+  // Define the states                
+  typedef enum logic[3:0] {S0,S1,S2,S3,S4,S5,S6,S7,S8,S9,S10} State;
+  State state, nextState;  // define state as current sate and nextState
+  logic Branch, PCUpdate;  // define them in order to get the PCWrite output
+  logic [1:0] ALUOp;
+  
+  always @ (posedge clk, posedge reset)
+    if (reset) state <= S0;
+    else       state <= nextState; 
+  
+  // next state logic (based on the FSM)  
+  always @ (*)
+    case(state)
+      S0: nextState = S1;
+      S1: if(lw_op | sw_op) nextState = S2;
+          else if(r_type_op)     nextState = S6;
+          else if(i_type_alu_op) nextState = S8;
+          else if(jal_op)        nextState = S9;
+          else if(beq_op)        nextState = S10;
+      S2: if(lw_op)              nextState = S3;
+          else if(sw_op)         nextState = S5;
+      S6: nextState = S7;
+      S8: nextState = S7;
+      S9: nextState = S7;
+      S10: nextState = S4;
+      S3: nextState = S4;
+      S5: nextState = S4;
+      S7: nextState = S4;
+      S4: nextState = S0;
+      default: nextState = S0;
+  endcase
+  
+  // output logic
+  assign Branch = (state==S10);
+  assign PCUpdate = (state==S0 | state==S9);
+  assign PCWrite = ((Zero & Branch) | PCUpdate);
+  assign RegWrite = (state==S4 | state==S7);
+  assign MemWrite = (state==S5);
+  assign IRWrite = (state==S0);
+  assign ResultSrc[1] = (state==S0);
+  assign ResultSrc[0] = (state==S4);
+  assign ALUSrcA[1] = (state==S2 | state==S6 | state==S8 | state==S10);
+  assign ALUSrcA[0] = (state==S1 | state==S9);
+  assign ALUSrcB[1] = (state==S0 | state==S9);
+  assign ALUSrcB[0] = (state==S1 | state==S2 | state==S8);
+  assign ALUOp[1] = (state==S6 | state==S8);
+  assign ALUOp[0] = (state==S10);
+  assign AdrSrc = (state==S3 | state==S5);
+
+  // Connect to ALU
+  logic x6n,x5n,x4n,x2n;
+  logic n1,n2,n3;
+
+  not g1(x5n,ALUOp[0]);
+  not g2(x4n,funct3[2]);
+  not g3(x2n,funct3[0]);
+    
+  and g4(ALUControl[2],ALUOp[1],x5n,x4n,funct3[1],x2n);
+    
+  and g5(ALUControl[1],ALUOp[1],x5n,funct3[2],funct3[1]);
+    
+  not g6(x6n,ALUOp[1]);
+  and g7(n1,x6n,ALUOp[0]);
+  and g8(n2,ALUOp[1],x5n,x4n,x2n,op[5],funct7b5);
+  and g9(n3,ALUOp[1],x5n,funct3[1],x2n);
+  or g10(ALUControl[0],n1,n2,n3);
+  
+  
+  // Instruction decoder
+  assign ImmSrc[1] = (beq_op | jal_op);
+  assign ImmSrc[0] = (sw_op | jal_op);
+
 endmodule
 
 module testbench();
