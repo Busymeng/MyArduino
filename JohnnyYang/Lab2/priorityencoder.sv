@@ -4,6 +4,25 @@ module priorityencoder(input  logic [7:1] a,
     // For Lab 2, write a structural Verilog model 
     // use and, or, not
     // do not use assign statements, always blocks, or other behavioral Verilog
+    
+    logic a6n,a5n,a4n,a2n;
+    logic n1,n2,n3,n4;
+    
+    not g1(a6n,a[6]);
+    not g2(a5n,a[5]);
+    not g3(a4n,a[4]);
+    not g11(a2n,a[2]);
+    
+    and g4(n1,a6n,a4n,a2n,a[1]);
+    and g5(n2,a6n,a4n,a[3]);
+    and g6(n3,a5n,a4n,a[2]);
+    and g7(n4,a6n,a[5]);
+    and g12(n5,a5n,a4n,a[3]);
+    
+    or g8(y[2],a[4],a[5],a[6],a[7]);
+    or g9(y[1],n3,n5,a[6],a[7]);
+    or g10(y[0],n1,n2,n4,a[7]);
+  
  
 endmodule
 
